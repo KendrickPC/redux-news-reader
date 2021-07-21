@@ -31,8 +31,7 @@ export const commentsSlice = createSlice({
       state.failedToLoadComments = true;
     },
     [loadCommentsForArticleId.fulfilled]: (state, action) => {
-      // state.byArticleId[action.payload.byArticleId] = action.payload.comments
-      // state.byArticleId[action.payload.articleId] = action.payload.comments
+      state.byArticleId[action.payload.articleId] = action.payload.comments
       state.isLoadingComments = false;
       state.failedToLoadComments = false;
     }

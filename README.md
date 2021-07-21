@@ -7,7 +7,7 @@
 In commentsSlice.js, import createAsyncThunk from Redux Toolkit.
 [createAsyncThunk documentation](https://redux-toolkit.js.org/api/createAsyncThunk)
 ```javascript
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 ```
 
 Now that you’ve imported createAsyncThunk, let’s use it to define an asynchronous action creator that fetches all the comments for a particular article.
@@ -128,7 +128,9 @@ export const commentsSlice = createSlice({
 ```
 
 Add a reducer for each of the three actions dispatched by loadCommentsForArticleId:
+
 Note: I referenced the past lesson, before the quiz, from MANAGING PROMISE LIFECYCLE ACTIONS: Conclusion and followed the structure for extraReducers from there.
+
 7a. The pending promise lifecycle action
 ```javascript
 extraReducers: {
@@ -164,8 +166,7 @@ extraReducers: {
     state.failedToLoadComments = true;
   },
   [loadCommentsForArticleId.fulfilled]: (state, action) => {
-    // state.byArticleId[action.payload.byArticleId] = action.payload.comments
-    // state.byArticleId[action.payload.articleId] = action.payload.comments
+    state.byArticleId[action.payload.articleId] = action.payload.comments
     state.isLoadingComments = false;
     state.failedToLoadComments = false;
   }
@@ -174,8 +175,10 @@ extraReducers: {
 ### Display Comments for the Current Article
 
 In comments.js:
+
 8a. Replace the empty array currently assigned to comments with the comments currently in state
-Note: useSelector() allows you to extract data from the Redux store state, using a selector function.
+
+Note: According to the documentation, [React Redux Hooks](https://react-redux.js.org/api/hooks#useselector) useSelector() allows you to extract data from the Redux store state, using a selector function.
 ```javascript
 // const comments = [];
 const comments = useSelector(selectComments);
@@ -187,19 +190,48 @@ const comments = useSelector(selectComments);
 const commentsAreLoading = useSelector(isLoadingComments);
 ```
 
+ Fetch all the comments for the current article any time the the current article changes. Once we have the comments for the current article, we’ll pass them to CommentList to make them show up on the page.
+
+In Comments.js: 
+
+9a. Using useEffect, dispatch loadCommentsForArticleId any time article changes and only if article is not undefined.
 ```javascript
+// Dispatch loadCommentsForArticleId with useEffect here.
+useEffect( () => {
+  if (article !== undefined) {
+    dispatch(loadCommentsForArticleId(article.id));
+  }
+}, [dispatch, article]);
 ```
+9b. Define a constant, commentsForArticleId, which should be an empty array when article is undefined and otherwise should be equal to comments[article.id].
 ```javascript
+const commentsForArticleId = article === undefined ? [] : comments[article.id];
+```
+9c. Replace the empty array we’ve passed as the CommentList‘s comments prop with commentsForArticleId.
+```javascript
+<CommentList comments={commentsForArticleId} />
 ```
 
+Make CommentList component render the comments it receives. Inside the <ul> of the CommentList component’s return statement (from CommentList.js file):
+
+10a. Map over the comments prop and render a Comment (we’ve imported this component for you) for each value.
 ```javascript
+{comments.map(comment => {
+  return <Comment />
+})}
+
+```
+10b. Each Comment component needs to be passed a comment prop.
+```javascript
+{comments.map(comment => {
+  return <Comment comment={comment} />
+})}
 ```
 
-```javascript
-```
+Checkpoint: Click on an article (LG, Kamala, Scientists), you should see that article’s comments displayed below it!
 
-```javascript
-```
+
+
 ```javascript
 ```
 
