@@ -212,14 +212,14 @@ const commentsForArticleId = article === undefined ? [] : comments[article.id];
 <CommentList comments={commentsForArticleId} />
 ```
 
-Make CommentList component render the comments it receives. Inside the <ul> of the CommentList component’s return statement (from CommentList.js file):
+Make CommentList component render the comments it receives.
+Inside the <ul> of the CommentList component’s return statement (from CommentList.js file):
 
 10a. Map over the comments prop and render a Comment (we’ve imported this component for you) for each value.
 ```javascript
 {comments.map(comment => {
   return <Comment />
 })}
-
 ```
 10b. Each Comment component needs to be passed a comment prop.
 ```javascript
@@ -230,6 +230,220 @@ Make CommentList component render the comments it receives. Inside the <ul> of t
 
 Checkpoint: Click on an article (LG, Kamala, Scientists), you should see that article’s comments displayed below it!
 
+### Write postCommentForArticleId
+
+Go through a similar process to add another form for creating new comments for the current article.
+
+First, back in commentsSlice.js, you’ll write another asynchronous action creator, postCommentForArticleId, which will be called like so:
+```javascript
+postCommentForArticleId({
+  articleId: 1,
+  comment: "This article is great!"
+}}
+```
+
+Inside commentsSlice.js:
+
+11a. Declare a new exported variable called postCommentForArticleId.
+```javascript
+export const postCommentForArticleId;
+```
+11b. Call createAsyncThunk with two arguments—an action type string, and an asynchronous callback—and store the result in postCommentForArticleId.
+[createAsyncThunk documentation](https://redux-toolkit.js.org/api/createAsyncThunk)
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async() => {
+
+  }
+);
+```
+11c. The asynchronous callback should accept an object with two properties–articleId and comment–as a parameter. You should destructure the object in your function definition so that you can refer to articleId and comment when you implement the function body.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+  }
+);
+```
+
+Now let’s implement the body of the asynchronous callback to make an asynchronous POST request to the news API.
+
+To make a POST request, we can again use the fetch() method but we must specify that we want to make a POST request. We must also pass along the comment value included in the parameter object (formatted as a stringified object).
+
+Inside the asynchronous callback passed to createAsyncThunk(),
+
+12a. Declare a new variable called requestBody. Then, call JSON.stringify() and pass in an object with a single property, comment, corresponding to the text of the new comment included in the parameter object. Assign the result to requestBody.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    fetch(`api/articles/${articleId}/comments`)
+  }
+);
+```
+
+12b. Call the fetch() method to make a request to 'api/articles/ID/comments', replacing 'ID' with the articleId value included in the parameter object.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    fetch(`api/articles/${articleId}/comments`)
+  }
+);
+```
+12c. Pass an options object as the second argument to fetch() after the URL. This object should have a method key with the value equal to the string 'POST'.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    fetch(`api/articles/${articleId}/comments`, {method: 'POST'})
+  }
+);
+```
+12d. Add a body key to the options object with the value equal requestBody.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    fetch(`api/articles/${articleId}/comments`, {
+      method: 'POST',
+      body: requestBody,
+    })
+  }
+);
+```
+12e. Since fetch is asynchronous, you’ll want to await the result and store it in a variable called response.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    const response = await fetch(`api/articles/${articleId}/comments`, {
+      method: 'POST',
+      body: requestBody,
+    })
+  }
+);
+```
+12f. To get the actual JSON data from the response body, call .json() on response. .json() is also asynchronous, so you’ll once again want to await the result and store it in a variable called json.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    const response = await fetch(`api/articles/${articleId}/comments`, {
+      method: 'POST',
+      body: requestBody,
+    })
+    const json = await response.json()
+  }
+);
+```
+12g. Finally, return json.
+```javascript
+export const postCommentForArticleId = createAsyncThunk(
+  'comments/postCommentForArticleId',
+  async( {articleId, comment} ) => {
+    // do some asynchronous operations here 
+    const requestBody = JSON.stringify( {comment: comment} ) ;
+    const response = await fetch(`api/articles/${articleId}/comments`, {
+      method: 'POST',
+      body: requestBody,
+    })
+    const json = await response.json()
+    return json;
+  }
+);
+```
+
+Like all action creators generated by createAsyncThunk, postCommentForArticleId will dispatch actions for each of the pending/fulfilled/rejected promise lifecycle states. In order to make our app reflect these changing states, we have to keep track of them in the store.
+
+13a. Add two booleans — createCommentIsPending and failedToCreateComment — to initialState, and set their initial values appropriately.
+Note: Inside the byArticleId object, the developer notes above hint to "add initial state properties here."
+```javascript
+export const commentsSlice = createSlice({
+  name: 'comments',
+  initialState: {
+    // Add initial state properties here.
+    byArticleId: {
+      isLoadingComments: false,
+      failedToLoadComments: false,
+      createCommentIsPending: false,
+      failedToCreateComment: false,
+    },
+  },
+})
+```
+
+
+Now modify the extraReducers property of your slice configuration options by adding a reducer for each of the three promise lifecyle actions dispatched by postCommentsForArticleId:
+
+14a. The pending promise lifecycle action
+```javascript
+extraReducers: {
+  ...
+  [postCommentForArticleId.pending]: (state, action) => {
+    state.createCommentIsPending = true;
+    state.failedToCreateComment = false;
+  },
+}
+```
+14b. The rejected promise lifecycle action
+```javascript
+extraReducers: {
+  ...
+  [postCommentForArticleId.pending]: (state, action) => {
+    state.createCommentIsPending = true;
+    state.failedToCreateComment = false;
+  },
+  [postCommentForArticleId.rejected]: (state, action) => {
+    state.createCommentIsPending = false;
+    state.failedToCreateComment = true;
+  },
+}
+```
+14c. The fulfilled promise lifecycle action. Note that in this case, action.payload will be a comment object including an articleId that you can use to add the comment object to correct article’s comment list in state.
+Each one should update the state accordingly.
+```javascript
+extraReducers: {
+  ...
+  [postCommentForArticleId.pending]: (state, action) => {
+    state.createCommentIsPending = true;
+    state.failedToCreateComment = false;
+  },
+  [postCommentForArticleId.rejected]: (state, action) => {
+    state.createCommentIsPending = false;
+    state.failedToCreateComment = true;
+  },
+  [postCommentForArticleId.fulfilled]: (state, action) => {
+    // The fulfilled reducer should add the newly created comment to the byArticleId object you added to initialState
+    state.byArticleId[action.payload.articleId].push(action.payload)
+    state.createCommentIsPending = false;
+    state.failedToCreateComment = false;
+  },
+}
+```
+
+
+
+
+
+
+```javascript
+```
+
 
 
 ```javascript
@@ -243,6 +457,9 @@ Checkpoint: Click on an article (LG, Kamala, Scientists), you should see that ar
 
 ```javascript
 ```
+
+
+
 ```javascript
 ```
 
