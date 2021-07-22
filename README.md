@@ -436,22 +436,32 @@ extraReducers: {
 }
 ```
 
+### Improve Comment Form UX
 
+Connect the CommentForm to our new asynchronous action creator.
 
-
-
-
+In CommentForm.js:
+15a. Import postCommentForArticleId from the comments slice.
 ```javascript
+import {
+  createCommentIsPending, postCommentForArticleId
+} from '../features/comments/commentsSlice';
+```
+15b. In handleSubmit, dispatch postCommentForArticleId passing in an object with articleId and comment.
+```javascript
+dispatch(postCommentForArticleId( {articleId, comment} ));
 ```
 
+Checkpoint: You should be able to create new comments with the comment form.
 
+Improve the user experience slightly by disabling the submit button when a request to create a new comment is pending. This will prevent users from accidentally creating the same comment twice.
 
+In CommentForm.js
+16a. Define a constant, isCreatePending, using useSelector and the imported selector createCommentIsPending.
 ```javascript
+const isCreatePending = useSelector(createCommentIsPending);
 ```
-
-```javascript
-```
-
+16b. Add a disabled attribute to the form’s button and set it equal to isCreatePending. Refresh the browser and try to create the same comment twice by double clicking. You’ll see that it’s now impossible to do so.
 ```javascript
 ```
 
