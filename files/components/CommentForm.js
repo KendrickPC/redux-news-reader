@@ -31,7 +31,7 @@ export default function CommentForm({ articleId }) {
           type='text'
         />
         <button
-          
+          disabled={isCreatePending}
           className='comment-button'
         >
           Submit

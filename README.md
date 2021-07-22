@@ -172,6 +172,7 @@ extraReducers: {
   }
 }
 ```
+
 ### Display Comments for the Current Article
 
 In comments.js:
@@ -457,28 +458,15 @@ Checkpoint: You should be able to create new comments with the comment form.
 Improve the user experience slightly by disabling the submit button when a request to create a new comment is pending. This will prevent users from accidentally creating the same comment twice.
 
 In CommentForm.js
+
 16a. Define a constant, isCreatePending, using useSelector and the imported selector createCommentIsPending.
 ```javascript
 const isCreatePending = useSelector(createCommentIsPending);
 ```
 16b. Add a disabled attribute to the form’s button and set it equal to isCreatePending. Refresh the browser and try to create the same comment twice by double clicking. You’ll see that it’s now impossible to do so.
 ```javascript
+<button
+  disabled={isCreatePending}
+  className='comment-button'
+>
 ```
-
-```javascript
-```
-
-
-
-```javascript
-```
-
-```javascript
-```
-
-```javascript
-```
-
-```javascript
-```
-
